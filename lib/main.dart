@@ -76,7 +76,7 @@ class ReceitasApi {
   static Future<List<Receita>> buscar([String? nome]) async {
     final url = Uri.https(
       'dummyjson.com',
-      nome == null ? '/recipes' : '/recipes/search',
+      '/endpoint-inexistente',
       nome == null ? {'limit': '30'} : {'q': nome},
     );
 
