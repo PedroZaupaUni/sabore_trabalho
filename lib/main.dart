@@ -1,5 +1,5 @@
-import 'dart:convert';
 
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -18,7 +18,9 @@ class SaboreApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: verde),
         scaffoldBackgroundColor: const Color(0xFFF8F5EF),
-        appBarTheme: const AppBarTheme(backgroundColor: Color(0xFFF8F5EF)),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFFF8F5EF),
+        ),
       ),
       home: const InicioPage(),
     );
@@ -33,18 +35,18 @@ class Receita {
   final num? avaliacao;
 
   Receita.fromJson(Map<String, dynamic> json)
-    : id = _id(json['id']),
-      nome = _nome(json['name']),
-      imagem = _texto(json['image']),
-      dificuldade = _texto(json['difficulty']),
-      cozinha = _texto(json['cuisine']),
-      ingredientes = _lista(json['ingredients']),
-      instrucoes = _lista(json['instructions']),
-      tipos = _lista(json['mealType']),
-      preparo = _inteiro(json['prepTimeMinutes']),
-      cozimento = _inteiro(json['cookTimeMinutes']),
-      porcoes = _inteiro(json['servings']),
-      avaliacao = json['rating'] is num ? json['rating'] : null;
+      : id = _id(json['id']),
+        nome = _nome(json['name']),
+        imagem = _texto(json['image']),
+        dificuldade = _texto(json['difficulty']),
+        cozinha = _texto(json['cuisine']),
+        ingredientes = _lista(json['ingredients']),
+        instrucoes = _lista(json['instructions']),
+        tipos = _lista(json['mealType']),
+        preparo = _inteiro(json['prepTimeMinutes']),
+        cozimento = _inteiro(json['cookTimeMinutes']),
+        porcoes = _inteiro(json['servings']),
+        avaliacao = json['rating'] is num ? json['rating'] : null;
 
   static int _id(dynamic v) {
     if (v is! num) throw const FormatException('ID inválido');
@@ -65,19 +67,21 @@ class Receita {
 
   static int? _inteiro(dynamic v) => v is num ? v.toInt() : null;
 
-  int? get tempo =>
-      preparo != null && cozimento != null ? preparo! + cozimento! : null;
+  int? get tempo => preparo != null && cozimento != null
+      ? preparo! + cozimento!
+      : null;
 }
 
 class ReceitasApi {
   static Future<List<Receita>> buscar([String? nome]) async {
     final url = Uri.https(
       'dummyjson.com',
-      '/endpoint-inexistente',
+      nome == null ? '/recipes' : '/recipes/search',
       nome == null ? {'limit': '30'} : {'q': nome},
     );
 
-    final resposta = await http.get(url).timeout(const Duration(seconds: 15));
+    final resposta = await http.get(url)
+        .timeout(const Duration(seconds: 15));
 
     if (resposta.statusCode != 200) {
       throw Exception('Erro HTTP ${resposta.statusCode}');
@@ -192,7 +196,10 @@ class _InicioPageState extends State<InicioPage> {
         selectedIndex: aba,
         onDestinationSelected: (i) => setState(() => aba = i),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.search), label: 'Explorar'),
+          NavigationDestination(
+            icon: Icon(Icons.search),
+            label: 'Explorar',
+          ),
           NavigationDestination(
             icon: Icon(Icons.favorite_border),
             label: 'Favoritos',
@@ -236,31 +243,26 @@ class _InicioPageState extends State<InicioPage> {
         ),
         if (pesquisa != null)
           TextButton(
-            onPressed: carregando
-                ? null
-                : () {
-                    campo.clear();
-                    carregar();
-                  },
+            onPressed: carregando ? null : () {
+              campo.clear();
+              carregar();
+            },
             child: const Text('Limpar pesquisa'),
           ),
         const SizedBox(height: 12),
         if (carregando)
           const Center(child: CircularProgressIndicator())
         else if (erro != null)
-          aviso(
-            'Erro de conexão ou resposta',
-            erro!,
-            'Tentar novamente',
-            () => carregar(pesquisa),
-          )
+          aviso('Erro de conexão ou resposta', erro!, 'Tentar novamente',
+                  () => carregar(pesquisa))
         else if (receitas.isEmpty)
-          aviso('Nenhum resultado', 'Receita não encontrada.', 'Ver todas', () {
-            campo.clear();
-            carregar();
-          })
-        else
-          ...receitas.map(cartao),
+            aviso('Nenhum resultado', 'Receita não encontrada.',
+                'Ver todas', () {
+                  campo.clear();
+                  carregar();
+                })
+          else
+            ...receitas.map(cartao),
       ],
     );
   }
@@ -275,12 +277,8 @@ class _InicioPageState extends State<InicioPage> {
         ),
         const SizedBox(height: 16),
         if (favoritos.isEmpty)
-          aviso(
-            'Nenhum favorito',
-            'Salve uma receita para vê-la aqui.',
-            'Explorar receitas',
-            () => setState(() => aba = 0),
-          )
+          aviso('Nenhum favorito', 'Salve uma receita para vê-la aqui.',
+              'Explorar receitas', () => setState(() => aba = 0))
         else
           ...favoritos.values.map(cartao),
       ],
@@ -296,8 +294,8 @@ class _InicioPageState extends State<InicioPage> {
         title: Text(receita.nome),
         subtitle: Text(
           '${receita.tempo == null ? "Tempo não informado" : "${receita.tempo} min"}'
-          ' • ${receita.dificuldade.isEmpty ? "Dificuldade não informada" : receita.dificuldade}'
-          '\n${receita.avaliacao == null ? "Sem avaliação" : "${receita.avaliacao} / 5"}',
+              ' • ${receita.dificuldade.isEmpty ? "Dificuldade não informada" : receita.dificuldade}'
+              '\n${receita.avaliacao == null ? "Sem avaliação" : "${receita.avaliacao} / 5"}',
         ),
         isThreeLine: true,
         onTap: () => abrir(receita),
@@ -338,10 +336,10 @@ Widget foto(Receita receita, double largura, double altura) {
     child: receita.imagem.isEmpty
         ? alternativa
         : Image.network(
-            receita.imagem,
-            fit: BoxFit.cover,
-            errorBuilder: (_, _, _) => alternativa,
-          ),
+      receita.imagem,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => alternativa,
+    ),
   );
 }
 
@@ -376,7 +374,9 @@ class _DetalhePageState extends State<DetalhePage> {
               setState(() {});
             },
             icon: Icon(
-              widget.favorito() ? Icons.favorite : Icons.favorite_border,
+              widget.favorito()
+                  ? Icons.favorite
+                  : Icons.favorite_border,
               color: verde,
             ),
           ),
@@ -389,18 +389,20 @@ class _DetalhePageState extends State<DetalhePage> {
           const SizedBox(height: 15),
           Text(
             r.nome,
-            style: const TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              fontSize: 25,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           Text(
             '${r.cozinha} • ${r.dificuldade} '
-            '• ${r.avaliacao == null ? "Sem avaliação" : "${r.avaliacao} / 5"}',
+                '• ${r.avaliacao == null ? "Sem avaliação" : "${r.avaliacao} / 5"}',
           ),
           const SizedBox(height: 12),
-          Text(
-            'Tempo total: ${r.tempo == null ? "Não informado" : "${r.tempo} min"}',
-          ),
+          Text('Tempo total: ${r.tempo == null ? "Não informado" : "${r.tempo} min"}'),
           Text('Porções: ${r.porcoes?.toString() ?? "Não informado"}'),
-          if (r.tipos.isNotEmpty) Text('Tipo: ${r.tipos.join(", ")}'),
+          if (r.tipos.isNotEmpty)
+            Text('Tipo: ${r.tipos.join(", ")}'),
           const SizedBox(height: 20),
           const Text(
             'Ingredientes',
@@ -421,7 +423,7 @@ class _DetalhePageState extends State<DetalhePage> {
             const Text('Não informado')
           else
             ...r.instrucoes.asMap().entries.map(
-              (e) => Padding(
+                  (e) => Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: Text('${e.key + 1}. ${e.value}'),
               ),
